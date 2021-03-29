@@ -1,1 +1,73 @@
+- hosts: all
+  tasks: 
+  
+  - yum :
+      name: yum-utils
+      state: latest
 
+  - yum :
+      name: device-mapper-persistent-data
+      state: latest
+
+  - yum :
+      name: lvm2
+      state: latest
+
+  - name: ADD DOCKER REPOSITORY
+    yum_repository:
+      name: docker
+      description: docker install
+      file: download.docker.com_linux_centos_7_x86_64_stable_
+      baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable/"
+      enabled: yes
+ 
+  - name: DOCKER INSTALLATION
+    shell: "yum install --nobest docker-ce -y"
+    register: docker
+
+  - name: Installation successfull
+    debug:
+      var: docker
+
+  - name: Docker Service start and enable
+    service: 
+      name: docker
+      state: started 
+      enabled: yes
+    register: docker_status
+
+  - name: Service started successfully
+    debug: 
+      var: docker_status
+
+  - name: Install PIP3
+    shell: "yum install -y  python3-pip "
+   
+
+
+  - name: Install Python Docker Library
+    shell: "pip3 install docker"
+  
+  
+  
+  - name: Pull an Image from DockerHub
+    docker_image:
+      name: httpd
+      source: pull
+
+  - name: Run webserver over docker container
+    docker_container:
+      name: mywebserver1
+      image: httpd
+      state: started
+      published_ports:
+      - "8085:80"
+      
+
+  - name: enable firewalld
+    ansible.posix.firewalld:
+      port: 8085/tcp
+      state: enabled
+      permanent: yes
+
+     
